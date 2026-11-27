@@ -1,0 +1,5 @@
+# arquivos grandes ou de trabalho que não vão para o repositório
+fotos-ia/*.png
+fotos-ia/anteriores/*.png
+amostras-voz/
+.claude/

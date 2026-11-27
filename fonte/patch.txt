@@ -1,0 +1,555 @@
+@@@ FIND
+<title>Simulador de Umidade Motomco</title>
+@@@ REPLACE
+<title>Simulador de Umidade Motomco</title>
+<meta name="theme-color" content="#06401f">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Simulador Motomco">
+@@@ END
+@@@ FIND
+body.m-expedicao{--c:var(--exp);--c-bg:var(--exp-bg);--c-ink:var(--exp-ink)}
+@@@ REPLACE
+body.m-expedicao{--c:var(--exp);--c-bg:var(--exp-bg);--c-ink:var(--exp-ink)}
+body.m-romaneio{--c:#b9862a;--c-bg:#f8efd9;--c-ink:#fff}
+body.m-balanco{--c:#1f5f73;--c-bg:#e2eff3;--c-ink:#fff}
+.aviso-ini{display:flex;gap:10px;align-items:center;font:600 14px var(--f-b);color:#fff;background:rgba(0,0,0,.22);border-radius:12px;padding:10px 14px;margin:0 0 6px}
+.aviso-ini i{flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--yel);color:#06401f;font:800 16px/26px var(--f-b);text-align:center;font-style:normal}
+.cascata .l .v b{font-weight:600}
+@@@ END
+@@@ FIND
+.grade{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;padding-bottom:6px}
+@@@ REPLACE
+.grade{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;padding-bottom:6px}
+@@@ END
+@@@ FIND
+.grade .perfil{aspect-ratio:3/4}
+@@@ REPLACE
+.grade .perfil{aspect-ratio:4/5}
+@@@ END
+@@@ FIND
+      <button class="perfil especialista" data-prova="1" style="--pc:#2e6e3e">
+@@@ REPLACE
+      <button class="perfil" data-modo="romaneio" data-foto style="--pc:#a8772a;--foto:url(fotos/06-classificacao.jpg)">
+          <span class="card-logo"><img src="__CARDLOGO__" alt=""></span>
+          <span class="fig" id="figRom" aria-hidden="true"></span>
+          <span class="card-txt"><b>Romaneio</b><span class="serif">Classificação completa da carga: impureza, umidade e avariados em sequência, até o peso líquido e o valor a receber.</span></span>
+          <span class="card-pill">Classificação ▸</span>
+        </button>
+      <button class="perfil" data-modo="balanco" data-foto style="--pc:#1f5f73;--foto:url(fotos/09-armazem.jpg)">
+          <span class="card-logo"><img src="__CARDLOGO__" alt=""></span>
+          <span class="fig" id="figBal" aria-hidden="true"></span>
+          <span class="card-txt"><b>Para onde foi o peso?</b><span class="serif">Balanço de massa da entrada à expedição: limpeza, secagem e armazenagem. A diferença está dentro do esperado?</span></span>
+          <span class="card-pill">Balanço de massa ▸</span>
+        </button>
+      <button class="perfil especialista" data-prova="1" style="--pc:#2e6e3e">
+@@@ END
+@@@ FIND
+sorteadas de um banco de 60, sobre classificação, desconto de umidade, desvio do MUG e quebra técnica.
+@@@ REPLACE
+sorteadas de um banco de 69, sobre classificação, desconto de umidade, romaneio, balanço de massa, desvio do MUG e quebra técnica.
+@@@ END
+@@@ FIND
+  <div class="estrada" aria-hidden="true">
+@@@ REPLACE
+  <div class="wrap pad"><p class="aviso-ini"><i>!</i>Uma safra inteira de trabalho merece um recebimento transparente. O fator comercial deve seguir a tabela da unidade ou do contrato.<small class="ia-nota">Imagens ilustrativas geradas por IA.</small></p></div>
+  <div class="estrada" aria-hidden="true">
+@@@ END
+@@@ FIND
+      <p>O fator de correção vem da tabela de desconto da unidade ou do contrato. Ele não é definido pelas instruções normativas do MAPA.</p>
+      <label>Fator de correção <small>% de desconto por ponto acima do padrão</small><input type="number" id="cfgFator" step="0.05" min="0"></label>
+@@@ REPLACE
+      <p>Escolha como a sua unidade calcula o desconto de umidade. Os dois modelos vêm da tabela comercial da unidade ou do contrato, não das instruções normativas do MAPA.</p>
+      <div class="seg dois" id="cfgModelo"><button type="button" data-m="fator" aria-pressed="true">Fator por ponto<small>ex.: 1,5% por ponto</small></button><button type="button" data-m="agua" aria-pressed="false">Água + quebra<small>água real + quebra técnica</small></button></div>
+      <label id="cfgLFator" style="margin-top:12px">Fator de correção <small>% de desconto por ponto acima do padrão</small><input type="number" id="cfgFator" step="0.05" min="0"></label>
+      <label id="cfgLQuebra" style="margin-top:12px">Quebra técnica <small>% somado ao desconto da água quando a carga precisa secar</small><input type="number" id="cfgQuebra" step="0.05" min="0"></label>
+@@@ END
+@@@ FIND
+const chipFator=()=>`<span class="chip-fator">Fator de correção ${pc(FATOR,2)} <button type="button">alterar</button></span>`;
+@@@ REPLACE
+let MODELO='fator', QUEBRA=0.5;
+try{const m=localStorage.getItem('motomco-modelo');if(m==='agua'||m==='fator')MODELO=m;const q=parseFloat(localStorage.getItem('motomco-quebra'));if(isFinite(q))QUEBRA=q;}catch(e){}
+/* desconto de umidade (%) pelo modelo escolhido nas configurações */
+function descUmid(u,ref){if(u<=ref||ref>=100)return 0;return MODELO==='agua'?(u-ref)*100/(100-ref)+QUEBRA:(u-ref)*FATOR;}
+function descTxt(u,ref){if(u<=ref)return `${pc(u)}% está no padrão de ${pc(ref,ref%1?1:0)}%: 0`;return MODELO==='agua'?`(${pc(u)} − ${pc(ref,ref%1?1:0)}) × 100 ÷ ${pc(100-ref,ref%1?1:0)} + ${pc(QUEBRA,2)}`:`(${pc(u)} − ${pc(ref,ref%1?1:0)}) × ${pc(FATOR,2)}`;}
+const chipFator=()=>`<span class="chip-fator">${MODELO==='agua'?'Água + quebra técnica de '+pc(QUEBRA,2)+'%':'Fator de correção '+pc(FATOR,2)} <button type="button">alterar</button></span>`;
+const TOL={soja:{imp:1,ava:8},milho:{imp:1,ava:6},trigo:{imp:1,ava:5},arroz:{imp:1,ava:4},feijao:{imp:1,ava:4},sorgo:{imp:1,ava:6},cafe:{imp:1,ava:0}};
+@@@ END
+@@@ FIND
+  expedicao:{nome:'Expedição · Quebra técnica',titulo:'Quebra técnica por supersecagem'}
+@@@ REPLACE
+  expedicao:{nome:'Expedição · Quebra técnica',titulo:'Quebra técnica por supersecagem'},
+  romaneio:{nome:'Romaneio · Classificação',titulo:'Classificação completa da carga'},
+  balanco:{nome:'Balanço de massa',titulo:'Para onde foi o peso do grão'}
+@@@ END
+@@@ FIND
+/* ===== Painéis de entrada por modo ===== */
+@@@ REPLACE
+CENA.romaneio=CENA.unidade; CENA.balanco=CENA.expedicao;
+/* ===== Painéis de entrada por modo ===== */
+@@@ END
+@@@ FIND
+    <div class="rapidos" id="rapUf">${[13,12.5,12,11.5,11].map(v=>`<button data-uf="${v}" aria-pressed="${v===12}">${pc(v)}%</button>`).join('')}</div></div>`
+@@@ REPLACE
+    <div class="rapidos" id="rapUf">${[13,12.5,12,11.5,11].map(v=>`<button data-uf="${v}" aria-pressed="${v===12}">${pc(v)}%</button>`).join('')}</div></div>`,
+  romaneio:()=>painelGrao()+`<div class="painel cfg"><h3>Carga e análise</h3>
+    <div class="campos"><label>Peso bruto <small>caminhão carregado</small><input type="number" id="bruto" step="100" value="45000"></label>
+    <label>Tara <small>caminhão vazio, após a descarga</small><input type="number" id="tara" step="100" value="15000"></label>
+    <label>Umidade medida<input type="number" id="umid" step="0.1" value="16"></label>
+    <label>Impureza medida <small>matéria estranha e impurezas</small><input type="number" id="imp" step="0.1" value="1.8"></label>
+    <label>Impureza tolerada<input type="number" id="impB" step="0.1" value="${TOL[grao].imp}"></label>
+    <label>Avariados medidos <small>ardidos, mofados, picados…</small><input type="number" id="ava" step="0.1" value="8.5"></label>
+    <label>Avariados tolerados<input type="number" id="avaB" step="0.1" value="${TOL[grao].ava}"></label>
+    <label>Taxa de secagem <small>se a unidade cobra à parte</small><input type="number" id="tsec" step="1" value="0"></label>
+    <label>Cargas na safra<input type="number" id="cargas" step="1" value="60"></label></div>
+    <p class="fonte">Tolerâncias de impureza e avariados: referência comercial comum. Confira o tipo e a tabela do seu contrato.</p>
+    <div class="rapidos" id="rapU">${[14,16,18,20,22].map(v=>`<button data-u="${v}">${v}%</button>`).join('')}</div></div>`,
+  balanco:()=>painelGrao()+`<div class="painel cfg"><h3>Entrada</h3>
+    <div class="campos"><label>Peso recebido <small>soma do lote na entrada</small><input type="number" id="peso" step="1000" value="1000000"></label>
+    <label>Umidade de entrada <small>média ponderada do recebimento</small><input type="number" id="ui" step="0.1" value="16"></label>
+    <label>Impureza retirada na limpeza <small>% do peso recebido</small><input type="number" id="impL" step="0.1" value="1.2"></label></div></div>
+    <div class="painel cfg"><h3>Secagem e armazenagem</h3>
+    <div class="campos"><label>Umidade de saída <small>na expedição</small><input type="number" id="uf" step="0.1" value="13.5"></label>
+    <label>Meses armazenado<input type="number" id="meses" step="1" value="4"></label>
+    <label>Quebra operacional aceita <small>% ao mês, conforme contrato</small><input type="number" id="tol" step="0.05" value="0.1"></label></div></div>
+    <div class="painel cfg"><h3>Expedição</h3>
+    <div class="campos"><label>Peso expedido <small>soma das cargas na balança</small><input type="number" id="pexp" step="1000" value="945000"></label></div>
+    <div class="rapidos" id="rapUf">${[14,13.5,13,12.5,12].map(v=>`<button data-uf="${v}">${pc(v)}%</button>`).join('')}</div>
+    <p class="fonte">Valores de exemplo para um lote de 1.000 t. Use os registros de balança e de umidade da sua unidade.</p></div>`
+@@@ END
+@@@ FIND
+    const pts=Math.max(0,u-ref), pct=pts*f, dKg=P*pct/100, liq=P-dKg;
+    const u2=Math.max(ref,u-2), pts2=Math.max(0,u2-ref), pct2=pts2*f, dKg2=P*pct2/100, ganhoKg=dKg-dKg2;
+@@@ REPLACE
+    const pts=Math.max(0,u-ref), pct=descUmid(u,ref), dKg=P*pct/100, liq=P-dKg;
+    const u2=Math.max(ref,u-2), pts2=Math.max(0,u2-ref), pct2=descUmid(u2,ref), dKg2=P*pct2/100, ganhoKg=dKg-dKg2;
+@@@ END
+@@@ FIND
+    const erro=(d)=>{const lida=u+d;return P*(Math.max(0,lida-ref)-Math.max(0,u-ref))*f/100;};
+@@@ REPLACE
+    const erro=(d)=>{const lida=u+d;return P*(descUmid(lida,ref)-descUmid(u,ref))/100;};
+@@@ END
+@@@ FIND
+    const dReal=P*Math.max(0,u-ref)*f/100;
+@@@ REPLACE
+    const dReal=P*descUmid(u,ref)/100;
+@@@ END
+@@@ FIND
+    return {ref,preco,P,ui,uf,cd,dias,est,meses,tol,tolTot,pts,quebra,fatorPt,Pest,extra,extraRs,vDia:extraRs*cd,vSafra:extraRs*cd*dias,kgSafra:extra*cd*dias,siloSc,siloRs:siloSc*preco,lida:uf};
+  }
+@@@ REPLACE
+    return {ref,preco,P,ui,uf,cd,dias,est,meses,tol,tolTot,pts,quebra,fatorPt,Pest,extra,extraRs,vDia:extraRs*cd,vSafra:extraRs*cd*dias,kgSafra:extra*cd*dias,siloSc,siloRs:siloSc*preco,lida:uf};
+  },
+  romaneio(){
+    const {ref,preco}=base(), bruto=n('bruto'), tara=n('tara'), P=Math.max(0,bruto-tara), u=n('umid'), imp=n('imp'), impB=n('impB'), ava=n('ava'), avaB=n('avaB'), tsec=n('tsec'), cargas=n('cargas');
+    const dImp=(imp>impB&&impB<100)?(imp-impB)*100/(100-impB):0, kImp=P*dImp/100, p1=P-kImp;
+    const dUmi=descUmid(u,ref), kUmi=p1*dUmi/100, p2=p1-kUmi;
+    const dAva=Math.max(0,ava-avaB), kAva=p2*dAva/100, liq=Math.max(0,p2-kAva);
+    const tot=P-liq, totPct=P?tot/P*100:0, secRs=u>ref?P/1000*tsec:0, vGrao=liq/60*preco, valor=vGrao-secRs;
+    const maior=[['imp',kImp],['umi',kUmi],['ava',kAva]].sort((a,b)=>b[1]-a[1])[0];
+    return {ref,preco,P,bruto,tara,u,imp,impB,ava,avaB,tsec,cargas,dImp,kImp,p1,dUmi,kUmi,p2,dAva,kAva,liq,tot,totPct,secRs,vGrao,valor,perdaRs:tot/60*preco+secRs,maior:maior[1]>0?maior[0]:null,pts:Math.max(0,u-ref),lida:u};
+  },
+  balanco(){
+    const {ref,preco,P}=base(), ui=n('ui'), uf=n('uf'), impL=n('impL'), meses=n('meses'), tol=n('tol'), pexp=n('pexp');
+    const kImp=P*impL/100, p1=P-kImp;
+    const p2=(uf<100)?p1*(100-ui)/(100-uf):p1, kAgua=p1-p2;
+    const tolTot=meses*tol, kOper=p2*tolTot/100, esperado=p2-kOper;
+    const dif=pexp-esperado, difPct=esperado?dif/esperado*100:0, totalRed=P-pexp;
+    const ok=Math.abs(difPct)<=0.1;
+    return {ref,preco,P,ui,uf,impL,meses,tol,tolTot,pexp,kImp,p1,p2,kAgua,kOper,esperado,dif,difPct,totalRed,ok,quebraAgua:p1?kAgua/p1*100:0,pts:Math.max(0,ui-uf),lida:uf};
+  }
+@@@ END
+@@@ FIND
+      <p class="fonte">No período: ${ton(r.kgSafra)} a mais carregados. No silo de ${pc(r.est,0)} sacas, a supersecagem leva ${pc(r.siloSc,0)} sacas.</p></div>
+@@@ REPLACE
+      <p class="fonte">No período: ${ton(r.kgSafra)} a mais carregados. No silo de ${pc(r.est,0)} sacas, a supersecagem leva ${pc(r.siloSc,0)} sacas.</p></div>
+      <div class="painel"><h3>Supersecagem ponto a ponto ${Q('e-fator')}</h3>
+      <div class="tabela-wrap"><table class="tabela-pt"><thead><tr><th>Sai do silo com</th><th>Quebra</th><th>Sacas a mais por caminhão</th><th>Por caminhão</th></tr></thead><tbody>
+      ${[13.5,13,12.5,12,11.5,11].filter(v=>v<r.ui).map(v=>{const q=(r.ui-v)*100/(100-v),ex=r.P*(100-v)/(100-r.ui)-r.P;return `<tr class="${Math.abs(v-r.uf)<1e-9?'sel':''}"><td>${pc(v)}%</td><td>${pc(q,2)}%</td><td>${sc(ex)}</td><td>${rs(ex/60*r.preco)}</td></tr>`;}).join('')}</tbody></table></div>
+      <p class="fonte">Calculado para o grão que entrou a ${pc(r.ui)}% e um caminhão de ${ton(r.P)}.</p></div>
+@@@ END
+@@@ FIND
+        <p class="fonte">Contratos de armazenagem costumam tolerar de 0,2% a 0,3% ao mês de quebra por matéria seca e manuseio. O que passa disso é perda operacional, geralmente por falta de controle de umidade, temperatura e aeração. Confira a taxa do seu contrato.</p>
+      </details>`;
+  }
+@@@ REPLACE
+        <p class="fonte">Contratos de armazenagem costumam tolerar de 0,2% a 0,3% ao mês de quebra por matéria seca e manuseio. O que passa disso é perda operacional, geralmente por falta de controle de umidade, temperatura e aeração. Confira a taxa do seu contrato.</p>
+      </details>`;
+  },
+  romaneio(r){
+    $('insRot').textContent='O que você recebe por esta carga';
+    $('insight').innerHTML=r.tot>0.5?`Você entrega <strong>${kg(r.P)}</strong> e recebe por <strong>${kg(r.liq)}</strong> (${sc(r.liq)}). Os descontos somam <strong>${pc(r.totPct,2)}%</strong>`+(r.preco>0?`, ou <strong>${rs(r.perdaRs)}</strong> nesta carga.`:'.'):`Carga dentro do padrão: você recebe pelo peso cheio de <strong>${kg(r.P)}</strong>.`;
+    const lin=(nome,det,d,k,resta,q)=>`<div class="l"><div class="k">${nome}<small>${det} · fica ${kg(resta)}</small></div><div class="v">${d>0?`<span style="color:var(--perda)">−${pc(d,2)}% · −${kg(k)}</span>`:'<span style="color:var(--muted)">sem desconto</span>'} ${Q(q)}</div></div>`;
+    const dicas={imp:['A impureza é a maior perda','Regule a plataforma, o cilindro e a ventilação da colhedora. Uma pré-limpeza antes de entregar tira a impureza que seria descontada.'],
+      umi:['A umidade é a maior perda','Medir a umidade na lavoura antes de carregar ajuda a escolher a hora de colher. Cada ponto acima do padrão sai do seu pagamento.'],
+      ava:['Os avariados são a maior perda','Avariados vêm de grão que ficou tempo demais no campo, de chuva na colheita e de regulagem agressiva. Colher no ponto certo reduz ardidos e quebrados.']};
+    const dc=r.maior?dicas[r.maior]:null;
+    return `<div class="painel"><h3>Romaneio da carga ${Q('r-ordem')}</h3>${chipFator()}
+      <div class="big4 verde"><div><span>Peso líquido</span><b>${kg(r.liq)}</b></div><div><span>Sacas</span><b>${sc(r.liq)}</b></div><div><span>Descontos</span><b style="color:var(--perda)">${kg(r.tot)}</b></div><div><span>A receber</span><b style="color:var(--ink)">${r.preco>0?rs(r.valor):'informe o preço'}</b></div></div>
+      <div class="linhas" style="margin-top:10px">
+        <div class="l"><div class="k">Peso da carga<small>bruto ${kg(r.bruto)} − tara ${kg(r.tara)}</small></div><div class="v">${kg(r.P)}</div></div>
+        ${lin('Impureza',`${pc(r.imp)}% medida, tolerância ${pc(r.impB)}%`,r.dImp,r.kImp,r.p1,'r-imp')}
+        ${lin('Umidade',`${pc(r.u)}% medida, padrão ${pc(r.ref,r.ref%1?1:0)}%`,r.dUmi,r.kUmi,r.p2,'r-umi')}
+        ${lin('Avariados',`${pc(r.ava)}% medidos, tolerância ${pc(r.avaB)}%`,r.dAva,r.kAva,r.liq,'r-ava')}
+        <div class="l tot"><div class="k">Peso líquido<small>${sc(r.liq)} × ${rs2(r.preco)} = ${rs(r.vGrao)}</small></div><div class="v">${kg(r.liq)}</div></div>
+        ${r.secRs?`<div class="l"><div class="k">Taxa de secagem<small>${pc(r.P/1000,2)} t × ${rs2(r.tsec)}</small></div><div class="v" style="color:var(--perda)">−${rs(r.secRs)}</div></div>`:''}
+        ${r.preco>0?`<div class="l tot"><div class="k">Valor a receber</div><div class="v">${rs(r.valor)}</div></div>`:''}
+      </div></div>
+      <div class="painel"><h3>Na safra ${Q('r-safra')}</h3><div class="big4"><div><span>Cargas</span><b style="color:var(--ink)">${r.cargas}</b></div><div><span>Descontos</span><b>${sc(r.tot*r.cargas)}</b></div><div><span>Reais</span><b>${rs(r.perdaRs*r.cargas)}</b></div></div></div>
+      <button class="b-dica" id="bDica"><img src="${AV}" alt=""><span>Dica do especialista<small>Eng. Agrônomo Roney Smolareck · onde está a maior perda desta carga</small></span></button>
+      <div class="painel dica" id="dica" hidden><h3>Dica do especialista ${Q('r-dica')}</h3>
+        ${dc?`<p style="margin:0 0 6px"><b>${dc[0]}.</b> ${dc[1]}</p><div class="linhas">
+          <div class="l"><div class="k">Impureza</div><div class="v">${kg(r.kImp)}</div></div>
+          <div class="l"><div class="k">Umidade</div><div class="v">${kg(r.kUmi)}</div></div>
+          <div class="l"><div class="k">Avariados</div><div class="v">${kg(r.kAva)}</div></div></div>`:'<p style="margin:0">Sem descontos nesta carga. Continue medindo na lavoura e mantendo a colhedora regulada.</p>'}</div>`;
+  },
+  balanco(r){
+    $('insRot').textContent='A diferença está dentro do esperado?';
+    const sinal=v=>(v>0?'+':v<0?'−':'')+kg(Math.abs(v));
+    $('insight').innerHTML=`Entraram <strong>${kg(r.P)}</strong> e saíram <strong>${kg(r.pexp)}</strong>. A limpeza, a secagem e a quebra aceita explicam até <strong>${kg(r.P-r.esperado)}</strong>. `+(r.ok?`A expedição bate com o esperado: <strong>dentro do controle</strong>.`:(r.dif<0?`Faltam <strong>${kg(-r.dif)}</strong> (${pc(-r.difPct,2)}%) sem explicação técnica`+(r.preco>0?`, ou <strong>${rs(-r.dif/60*r.preco)}</strong>.`:'.'):`Saíram <strong>${kg(r.dif)}</strong> a mais que o esperado: confira umidade e registros de balança.`));
+    return `<div class="painel"><h3>Balanço de massa ${Q('b-balanco')}</h3>
+      <div class="big4"><div><span>Esperado</span><b style="color:var(--ink)">${kg(r.esperado)}</b></div><div><span>Expedido</span><b style="color:var(--ink)">${kg(r.pexp)}</b></div><div><span>Diferença</span><b style="color:${r.ok?'var(--ganho)':'var(--perda)'}">${sinal(r.dif)}</b></div><div><span>Em sacas</span><b style="color:${r.ok?'var(--ganho)':'var(--perda)'}">${sc(Math.abs(r.dif))}</b></div></div>
+      <div class="linhas cascata" style="margin-top:10px">
+        <div class="l"><div class="k">Peso recebido<small>umidade média ${pc(r.ui)}%</small></div><div class="v">${kg(r.P)}</div></div>
+        <div class="l"><div class="k">Impureza retirada na limpeza<small>${pc(r.impL)}% do recebido</small></div><div class="v"><span style="color:var(--perda)">−${kg(r.kImp)}</span> ${Q('b-limpeza')}</div></div>
+        <div class="l"><div class="k">Água retirada na secagem<small>${pc(r.ui)}% → ${pc(r.uf)}% · quebra de ${pc(r.quebraAgua,2)}%</small></div><div class="v"><span style="color:var(--perda)">−${kg(r.kAgua)}</span> ${Q('b-agua')}</div></div>
+        <div class="l"><div class="k">Quebra operacional aceita<small>${pc(r.meses,0)} meses × ${pc(r.tol,2)}% = ${pc(r.tolTot,2)}%</small></div><div class="v"><span style="color:var(--perda)">−${kg(r.kOper)}</span> ${Q('b-oper')}</div></div>
+        <div class="l tot"><div class="k">Peso esperado na expedição</div><div class="v">${kg(r.esperado)}</div></div>
+        <div class="l"><div class="k">Peso expedido<small>balança de saída</small></div><div class="v">${kg(r.pexp)}</div></div>
+        <div class="l tot"><div class="k">${r.ok?'Dentro do esperado':(r.dif<0?'Diferença sem explicação técnica':'Sobra em relação ao esperado')}</div><div class="v" style="color:${r.ok?'var(--ganho)':'var(--perda)'}">${sinal(r.dif)} · ${pc(Math.abs(r.difPct),2)}%</div></div>
+      </div>${r.preco>0&&!r.ok?`<p class="fonte">Valor da diferença: ${sc(Math.abs(r.dif))} × ${rs2(r.preco)} = ${rs(Math.abs(r.dif)/60*r.preco)}.</p>`:''}</div>
+      <div class="painel"><h3>Para onde foi o peso ${Q('b-onde')}</h3>
+      <div class="linhas">
+        <div class="l"><div class="k">Água<small>retirada na secagem, tem explicação física</small></div><div class="v">${kg(r.kAgua)}</div></div>
+        <div class="l"><div class="k">Impurezas<small>separadas na limpeza</small></div><div class="v">${kg(r.kImp)}</div></div>
+        <div class="l"><div class="k">Operação<small>movimentação, pó, respiração e pragas</small></div><div class="v">${kg(r.kOper)}</div></div>
+        <div class="l"><div class="k">Sem explicação<small>${r.dif<0&&!r.ok?'umidade mal medida, balança, controle de estoque':'nenhuma diferença relevante'}</small></div><div class="v" style="color:${r.dif<0&&!r.ok?'var(--perda)':'var(--muted)'}">${r.dif<0&&!r.ok?kg(-r.dif):'—'}</div></div>
+      </div></div>
+      <button class="b-dica" id="bDica"><img src="${AV}" alt=""><span>Dica do especialista<small>Eng. Agrônomo Roney Smolareck · como explicar cada diferença</small></span></button>
+      <div class="painel dica" id="dica" hidden><h3>Dica do especialista ${Q('b-dica')}</h3>
+        <p style="margin:0 0 8px">${r.ok?'O balanço fecha. Mantenha o registro de umidade de cada carga na entrada e na saída para continuar provando isso.':`Antes de culpar a operação, confira a umidade. Um desvio de 0,5 ponto na umidade média de entrada muda o peso esperado em cerca de ${kg(r.p1*0.5/(100-r.uf))}.`}</p>
+        <div class="linhas"><div class="l"><div class="k">1. Medir a umidade de cada carga, na entrada e na saída<small>com MUG calibrado e verificado</small></div></div>
+        <div class="l"><div class="k">2. Registrar a impureza retirada na limpeza<small>pesando o resíduo</small></div></div>
+        <div class="l"><div class="k">3. Acompanhar o balanço todo mês<small>e não só no fim do estoque</small></div></div></div>
+        <p class="res" style="font:700 17px/1.45 var(--f-b)">O peso muda. Mas cada diferença precisa ter uma explicação técnica.</p></div>`;
+  },
+  secagemREMOVIDA(r){
+    $('insRot').textContent='Secar na fazenda ou entregar úmido';
+    if(!r.umido){$('insight').innerHTML=`A carga já está em <strong>${pc(r.u)}%</strong>, dentro do padrão de ${pc(r.ref,r.ref%1?1:0)}%. Não precisa secar: entregue como está.`;}
+    else $('insight').innerHTML=r.dif>=0?`Secar na fazenda deixa <strong>${rs(r.dif)} a mais</strong> por carga, ou <strong>${rs(r.dif*r.cargas)}</strong> na safra. Vale a pena enquanto a secagem própria custar menos de <strong>${rs2(Math.max(0,r.csecMax))} por tonelada</strong>.`:`Com estes custos, entregar úmido rende <strong>${rs(-r.dif)} a mais</strong> por carga. A secagem própria passa a compensar abaixo de <strong>${rs2(Math.max(0,r.csecMax))} por tonelada</strong>.`;
+    const m=(a,b)=>a>=b?' class="melhor"':'';
+    return `<div class="painel"><h3>Comparação por carga ${Q('s-comp')}</h3>${chipFator()}
+      <div class="tabela-wrap"><table class="tabela-pt cmp-tab"><thead><tr><th></th><th>Entregar úmido</th><th>Secar na fazenda</th></tr></thead><tbody>
+        <tr><td>Peso que sai da fazenda</td><td>${kg(r.P)}</td><td>${kg(r.P)}</td></tr>
+        <tr><td>Umidade na entrega</td><td>${pc(r.u)}%</td><td>${pc(Math.min(r.u,r.ref),r.ref%1?1:0)}%</td></tr>
+        <tr><td>Desconto ou água retirada</td><td>−${kg(r.kA)}</td><td>−${kg(r.agua)}</td></tr>
+        <tr><td>Peso pago</td><td>${kg(r.liqA)}</td><td>${kg(r.Ps)}</td></tr>
+        <tr><td>Valor do grão</td><td>${rs(r.grA)}</td><td>${rs(r.grB)}</td></tr>
+        <tr><td>Secagem</td><td>−${rs(r.secA)}</td><td>−${rs(r.secB)}</td></tr>
+        <tr><td>Frete</td><td>−${rs(r.freteA)}</td><td>−${rs(r.freteB)}</td></tr>
+        <tr class="sel"><td>Sobra por carga</td><td${m(r.valorA,r.valorB)}>${rs(r.valorA)}</td><td${m(r.valorB,r.valorA)}>${rs(r.valorB)}</td></tr>
+      </tbody></table></div>
+      <p class="fonte">Secando na fazenda o grão chega no padrão e sai só a água. Entregando úmido, a unidade desconta pela tabela dela.</p></div>
+      <div class="painel"><h3>Na safra ${Q('s-safra')}</h3><div class="big4 ${r.dif>=0?'verde':''}"><div><span>Cargas</span><b style="color:var(--ink)">${r.cargas}</b></div><div><span>Diferença</span><b>${rs(Math.abs(r.dif)*r.cargas)}</b></div><div><span>Ponto de equilíbrio</span><b style="color:var(--ink)">${rs2(Math.max(0,r.csecMax))}/t</b></div></div>
+      <p class="fonte">${r.dif>=0?'A favor de secar na fazenda.':'A favor de entregar úmido.'} Ponto de equilíbrio: custo de secagem própria por tonelada úmida em que as duas opções empatam.</p></div>
+      <button class="b-dica" id="bDica"><img src="${AV}" alt=""><span>Dica do especialista<small>Eng. Agrônomo Roney Smolareck · secar até o ponto certo</small></span></button>
+      <div class="painel dica" id="dica" hidden><h3>Dica do especialista ${Q('s-dica')}</h3>
+        <p style="margin:0">Secar além do padrão também custa: cada ponto abaixo de ${pc(r.ref,r.ref%1?1:0)}% tira cerca de ${pc(100/(100-r.ref+1),2)}% do peso sem pagamento a mais. Medir na saída do secador evita supersecar.</p>
+        ${r.umido?`<div class="linhas"><div class="l"><div class="k">Supersecar 1 ponto nesta carga<small>${kg(r.Ps)} × 1 ÷ ${pc(100-r.ref+1,r.ref%1?1:0)}</small></div><div class="v">−${kg(r.Ps/(100-r.ref+1))} · −${rs(r.Ps/(100-r.ref+1)/60*r.preco)}</div></div></div>`:''}</div>`;
+  }
+@@@ END
+@@@ FIND
+      expedicao:['Quebra técnica',
+@@@ REPLACE
+      romaneio:['Romaneio',`<p>Na classificação, a unidade desconta primeiro a impureza, depois a umidade sobre o grão limpo e por último os avariados acima da tolerância. Cada desconto incide sobre o peso que sobrou do anterior.</p><p>Toque nos <b>?</b> para ver cada conta.</p>`],
+      balanco:['Para onde foi o peso?',`<p>O produto chega à unidade com uma massa e uma umidade. No caminho passa pela limpeza, pela secagem, pela movimentação e pela armazenagem, e a massa muda.</p><p>Parte da redução é água retirada. O resto vem das impurezas, das perdas operacionais e do controle de estoque. Por isso comparar só a entrada com a saída não basta: é preciso fazer o balanço de massa.</p>`],
+      expedicao:['Quebra técnica',
+@@@ END
+@@@ FIND
+    'e-silo':()=>[
+@@@ REPLACE
+    'r-ordem':()=>['Ordem dos descontos',`<div class="conta">${kg(r.P)} − impureza = ${kg(r.p1)}</div><div class="conta">${kg(r.p1)} − umidade = ${kg(r.p2)}</div><div class="conta">${kg(r.p2)} − avariados = ${kg(r.liq)}</div><p>A impureza sai primeiro porque não é grão. A umidade e os avariados são calculados sobre o que sobra.</p>`],
+    'r-imp':()=>['Desconto de impureza',`<div class="conta">(${pc(r.imp)} − ${pc(r.impB)}) × 100 ÷ (100 − ${pc(r.impB)}) = ${pc(r.dImp,2)}%</div><div class="conta">${kg(r.P)} × ${pc(r.dImp,2)}% = ${kg(r.kImp)}</div><p>Só o que passa da tolerância é descontado.</p>`],
+    'r-umi':()=>['Desconto de umidade',`<div class="conta">${descTxt(r.u,r.ref)} = ${pc(r.dUmi,2)}%</div><div class="conta">${kg(r.p1)} × ${pc(r.dUmi,2)}% = ${kg(r.kUmi)}</div><p>${MODELO==='agua'?'Modelo água + quebra: a água real que sai na secagem mais a quebra técnica da unidade.':'Modelo fator por ponto: cada ponto acima do padrão vale '+pc(FATOR,2)+'% pela tabela da unidade.'} Mude em Configurações.</p>`],
+    'r-ava':()=>['Desconto de avariados',`<div class="conta">${pc(r.ava)} − ${pc(r.avaB)} = ${pc(r.dAva,2)}%</div><div class="conta">${kg(r.p2)} × ${pc(r.dAva,2)}% = ${kg(r.kAva)}</div><p>Avariados acima da tolerância saem ponto a ponto. Algumas tabelas usam fator por ponto também: confira o seu contrato.</p>`],
+    'r-safra':()=>['Na safra',`<div class="conta">${sc(r.tot)} × ${r.cargas} cargas = ${sc(r.tot*r.cargas)}</div><div class="conta">${rs(r.perdaRs)} × ${r.cargas} = ${rs(r.perdaRs*r.cargas)}</div>`],
+    'r-dica':()=>['Onde está a maior perda',`<p>Compare os três descontos em quilos. Atacar o maior deles primeiro é o que mais devolve dinheiro por carga.</p>`],
+    'b-balanco':()=>['O balanço de massa',`<div class="conta">${kg(r.P)} − ${kg(r.kImp)} − ${kg(r.kAgua)} − ${kg(r.kOper)} = ${kg(r.esperado)}</div><div class="conta">${kg(r.pexp)} − ${kg(r.esperado)} = ${(r.dif<0?'−':'+')+kg(Math.abs(r.dif))}</div><p>Diferenças de até 0,1% do esperado são tratadas aqui como dentro do controle.</p>`],
+    'b-limpeza':()=>['Impureza retirada',`<div class="conta">${kg(r.P)} × ${pc(r.impL)}% = ${kg(r.kImp)}</div><p>O ideal é pesar o resíduo da limpeza, em vez de estimar pela classificação.</p>`],
+    'b-agua':()=>['Água retirada',`<div class="conta">Pf = Pi × (100 − Ui) ÷ (100 − Uf)</div><div class="conta">${kg(r.p1)} × ${pc(100-r.ui)} ÷ ${pc(100-r.uf)} = ${kg(r.p2)}</div><div class="conta">${kg(r.p1)} − ${kg(r.p2)} = ${kg(r.kAgua)}</div><p>Quando retiramos água, retiramos também peso. Essa diferença tem explicação física.</p>`],
+    'b-oper':()=>['Quebra operacional',`<div class="conta">${kg(r.p2)} × ${pc(r.tolTot,2)}% = ${kg(r.kOper)}</div><p>Movimentação, pó, respiração do grão e pragas. Confira a taxa aceita no seu contrato.</p>`],
+    'b-onde':()=>['Cada diferença com explicação',`<p>Água, impureza e operação têm explicação técnica. O que sobra precisa ser investigado: umidade mal medida na entrada ou na saída, balança, ou controle de estoque.</p>`],
+    'b-dica':()=>['Umidade bem medida fecha o balanço',`<div class="conta">${kg(r.p1)} × 0,5 ÷ ${pc(100-r.uf)} = ${kg(r.p1*0.5/(100-r.uf))}</div><p>Meio ponto de erro na umidade média de entrada já muda o peso esperado nessa quantidade.</p>`],
+    'e-silo':()=>[
+@@@ END
+@@@ FIND
+    'p-desc':()=>['Desconto da carga',`<div class="conta">(${pc(r.u)} − ${pc(r.ref,0)}) × ${pc(r.f,2)} = ${pc(r.pct,2)}%</div>
+@@@ REPLACE
+    'p-desc':()=>['Desconto da carga',`<div class="conta">${descTxt(r.u,r.ref)} = ${pc(r.pct,2)}%</div>
+@@@ END
+@@@ FIND
+O fator ${pc(r.f,2)} é da tabela comercial da unidade.</p>`],
+@@@ REPLACE
+${MODELO==='agua'?'A quebra técnica de '+pc(QUEBRA,2)+'% é':'O fator '+pc(r.f,2)+' é'} da tabela comercial da unidade.</p>`],
+@@@ END
+@@@ FIND
+<div class="conta">(${pc(r.u2)} − ${pc(r.ref,0)}) × ${pc(r.f,2)} = ${pc(r.pct2,2)}%</div>
+@@@ REPLACE
+<div class="conta">${descTxt(r.u2,r.ref)} = ${pc(r.pct2,2)}%</div>
+@@@ END
+@@@ FIND
+<div class="conta">(${pc(Math.max(r.lida,r.ref))} − ${pc(r.ref,0)}) × ${pc(r.f,2)} − (${pc(r.u)} − ${pc(r.ref,0)}) × ${pc(r.f,2)}</div>
+@@@ REPLACE
+<div class="conta">desconto lido ${pc(descUmid(r.lida,r.ref),2)}% − desconto real ${pc(descUmid(r.u,r.ref),2)}%</div>
+@@@ END
+@@@ FIND
+explica(modo==='unidade'?'u-dica':'p-dica')
+@@@ REPLACE
+explica(({unidade:'u-dica',romaneio:'r-dica',balanco:'b-dica'})[modo]||'p-dica')
+@@@ END
+@@@ FIND
+const UNID={peso:['kg'],
+@@@ REPLACE
+const UNID={imp:['%'],impB:['%'],ava:['%'],avaB:['%'],tsec:['R$/t'],impL:['%'],pexp:['kg'],bruto:['kg'],tara:['kg'],peso:['kg'],
+@@@ END
+@@@ FIND
+function sentimento(r){
+@@@ REPLACE
+function sentimento(r){if(modo==='romaneio')return r.totPct<=2?'feliz':(r.totPct<=6?'pensa':'raiva');if(modo==='balanco')return r.ok?'feliz':(Math.abs(r.difPct)<=0.5?'pensa':'raiva');
+@@@ END
+@@@ FIND
+    else setTimeout(fim,fala.length*70+800);
+@@@ REPLACE
+    else if('speechSynthesis' in window){try{speechSynthesis.cancel();const ut=new SpeechSynthesisUtterance(fala);const vz=vozPt();if(vz)ut.voice=vz;ut.lang='pt-BR';ut.rate=1.05;ut.onend=fim;ut.onerror=fim;speechSynthesis.speak(ut);}catch(e){setTimeout(fim,fala.length*70+800);}}
+    else setTimeout(fim,fala.length*70+800);
+@@@ END
+@@@ FIND
+  if(!narrar){try{AUD.pause();}catch(e){} $('legenda').hidden=true;}
+@@@ REPLACE
+  if(!narrar){try{AUD.pause();speechSynthesis.cancel();}catch(e){} $('legenda').hidden=true;}
+@@@ END
+@@@ FIND
+token++;try{AUD.pause();}catch(e){}$('legenda').hidden=true;$('sim').hidden=true;
+@@@ REPLACE
+token++;try{AUD.pause();speechSynthesis.cancel();}catch(e){}$('legenda').hidden=true;$('sim').hidden=true;
+@@@ END
+@@@ FIND
+$('bVoz').onclick=()=>{
+@@@ REPLACE
+try{speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();}catch(e){}
+function linhasRomaneio(r){
+  const g=GRAOS[grao].nome.toLowerCase();
+  const L=[`Depois de meses de trabalho no campo, chega a entrega da produção. O caminhão com ${g} entra na balança.`,
+    `O primeiro passo é conhecer o peso real da carga: ${nfala(r.bruto)} quilos de peso bruto, menos ${nfala(r.tara)} de tara, dão ${nfala(r.P)} quilos de carga.`,
+    `Uma amostra representativa é coletada. É nela que começa a avaliação da qualidade dos grãos.`,
+    `O medidor Motomco lê ${nfala1(r.u)} por cento de umidade. A umidade influencia diretamente a massa do produto e precisa ser medida com precisão.`,
+    `Cada parâmetro tem seu critério: ${nfala1(r.imp)} por cento de impureza, ${nfala1(r.u)} de umidade e ${nfala1(r.ava)} de avariados.`+(r.tot>0.5?` Com os descontos, a carga fica em ${nfala(r.liq)} quilos.`:` A carga está dentro do padrão.`)];
+  L.push(`Quando os dados são claros, o produtor entende o resultado da sua entrega`+(r.preco>0?`: ${nfala1(r.liq/60)} sacas, ${nfala(r.valor)} reais.`:'.'));
+  return L;
+}
+function linhasBalanco(r){
+  const L=[`Tudo começa com uma pergunta: quantos quilos de grãos realmente recebemos? Entraram ${nfala(r.P/1000)} toneladas.`,
+    `O grão não é formado apenas por matéria seca. Uma parte do seu peso é água: ${nfala1(r.ui)} por cento na entrada.`,
+    `Quando retiramos água, retiramos também peso. A secagem até ${nfala1(r.uf)} por cento tira ${nfala(r.kAgua/1000)} toneladas.`,
+    `Além da água, a limpeza, a movimentação e a armazenagem também influenciam o balanço de massa.`,
+    `Na expedição saíram ${nfala(r.pexp/1000)} toneladas. A pergunta é: a diferença está dentro do esperado?`];
+  L.push(r.ok?'Sim. O balanço fecha, e cada diferença tem explicação técnica.':(r.dif<0?`Faltam ${nfala(-r.dif)} quilos sem explicação técnica. É hora de investigar umidade, balança e estoque.`:`Saíram ${nfala(r.dif)} quilos a mais que o esperado. Vale conferir a umidade e os registros.`));
+  L.push('Conhecer a quebra técnica é transformar informação em controle e segurança na gestão dos grãos.');
+  return L;
+}
+$('bVoz').onclick=()=>{
+@@@ END
+@@@ FIND
+    st(`Entrou a ${pc(r.ui)}%, saiu a ${pc(r.uf)}% · fator ${pc(r.fatorPt,3)}% por ponto`);
+    window.__fim=performance.now();
+  }
+}
+@@@ REPLACE
+    st(`Entrou a ${pc(r.ui)}%, saiu a ${pc(r.uf)}% · fator ${pc(r.fatorPt,3)}% por ponto`);
+    window.__fim=performance.now();
+  }
+  if(modo==='romaneio'){
+    const L=linhasRomaneio(r); CH=[]; window.__marks=[];
+    const tr=truckSVG({carretas:2,gotas:true}); const T=$('truck'); T.innerHTML=tr.svg; T.style.transform=`translateX(${-tr.w-20}px)`;
+    st('Caminhão entrando na balança…'); T.classList.add('rodando'); let f=falar(0,L[0],0,vivo); await mover(T,705-tr.w,2300); await f; if(!vivo())return; T.classList.remove('rodando');
+    st('Balança: peso bruto, depois a tara…'); f=falar(1,L[1],0,vivo); await contar($('tPeso'),0,r.bruto,900,v=>kg(v)); if(!vivo())return;
+    $('tRot').textContent='CARGA'; $('tSub').textContent=`tara −${kg(r.tara)}`; await contar($('tPeso'),r.bruto,r.P,900,v=>kg(v)); await f; if(!vivo())return;
+    st('Calador coletando a amostra para a classificação…'); f=falar(2,L[2],0,vivo);
+    const carro=$('carro'), sonda=$('sonda');
+    carro.style.transition=reduz?'none':'transform .9s ease-in-out'; carro.style.transform='translate(560px,0)'; await espera(950); if(!vivo())return;
+    await contar({set textContent(v){sonda.setAttribute('y2',v);}},96,258,900,v=>v); await espera(250);
+    await contar({set textContent(v){sonda.setAttribute('y2',v);}},258,96,700,v=>v); if(!vivo())return;
+    carro.style.transform='translate(470px,0)'; await espera(950); await f; if(!vivo())return;
+    st('Classificação: umidade, impureza e avariados…'); f=falar(3,L[3],0,vivo); await lerMedidor(r.u); await f; if(!vivo())return;
+    $('tRot').textContent='PESO LÍQUIDO'; f=falar(4,L[4],0,vivo);
+    let atual=r.P;
+    for(const [p,t] of [[r.p1,`impureza −${kg(r.kImp)}`],[r.p2,`umidade −${kg(r.kUmi)}`],[r.liq,`avariados −${kg(r.kAva)}`]]){
+      $('tSub').textContent=t; if(p<atual-0.5)await contar($('tPeso'),atual,p,900,v=>kg(v)); else await espera(450); atual=p; if(!vivo())return;}
+    $('tSub').textContent=`descontos −${kg(r.tot)}`;
+    etiqueta(r.tot>0.5?'#b5482e':'#2f7d32',r.tot>0.5?`Descontos ${pc(r.totPct,2)}%: −${kg(r.tot)} · ${sc(r.tot)}`+(r.preco>0?` · ${rs(r.perdaRs)}`:''):'Carga dentro do padrão: sem desconto');
+    if(r.kUmi>0){cena.classList.add('pingando');st('A água descontada saindo da carga…');}
+    cena.setAttribute('data-humor',sentimento(r));
+    await Promise.all([f,espera(3600)]); if(!vivo())return; cena.classList.remove('pingando');
+    T.classList.add('rodando'); mover(T,960,2800);
+    for(let i=5;i<L.length;i++){await falar(i,L[i],0,vivo); if(!vivo())return;}
+    st(`Líquido ${kg(r.liq)} · ${sc(r.liq)}`+(r.preco>0?` · ${rs(r.valor)}`:''));
+    window.__fim=performance.now();
+  }
+  if(modo==='balanco'){
+    const L=linhasBalanco(r); CH=[]; window.__marks=[];
+    $('siloUmid').textContent=pc(r.uf)+'%';
+    const tr=truckSVG({carretas:2,heapVazio:true}); const T=$('truck'); T.innerHTML=tr.svg; T.style.transform='translateX(176px)';
+    $('tRot').textContent='ENTRADA'; st('Entrada: o peso recebido…'); let f=falar(0,L[0],0,vivo);
+    await contar($('tPeso'),0,r.P,1100,v=>ton(v)); await f; if(!vivo())return;
+    st('Umidade de entrada…'); f=falar(1,L[1],0,vivo); await lerMedidor(r.ui); await f; if(!vivo())return;
+    $('tRot').textContent='SECAGEM'; $('tSub').textContent=`água −${ton(r.kAgua)}`; f=falar(2,L[2],0,vivo);
+    await contar($('tPeso'),r.P,r.P-r.kImp-r.kAgua,1300,v=>ton(v)); await f; if(!vivo())return;
+    $('tRot').textContent='ARMAZENAGEM'; $('tSub').textContent=`limpeza −${ton(r.kImp)} · operação −${ton(r.kOper)}`; f=falar(3,L[3],0,vivo);
+    await contar($('tPeso'),r.P-r.kImp-r.kAgua,r.esperado,1100,v=>ton(v)); await f; if(!vivo())return;
+    st('Carregando a expedição no silo…'); $('fluxo').parentNode.classList.add('caindo');
+    requestAnimationFrame(()=>T.querySelectorAll('.heap').forEach(h=>h.style.transform='scaleY(1)'));
+    await espera(2200); if(!vivo())return; $('fluxo').parentNode.classList.remove('caindo');
+    T.classList.add('rodando'); await mover(T,880-tr.w,2300); if(!vivo())return; T.classList.remove('rodando');
+    $('tRot').textContent='EXPEDIDO'; $('tSub').textContent=`esperado ${ton(r.esperado)}`; f=falar(4,L[4],0,vivo);
+    await lerMedidor(r.uf); await contar($('tPeso'),r.esperado,r.pexp,1000,v=>ton(v)); await f; if(!vivo())return;
+    etiqueta(r.ok?'#2f7d32':'#b5482e',r.ok?'Balanço fecha: diferença dentro do esperado':(r.dif<0?`Faltam ${kg(-r.dif)} sem explicação técnica (${pc(-r.difPct,2)}%)`:`Sobram ${kg(r.dif)} em relação ao esperado`));
+    cena.setAttribute('data-humor',sentimento(r)); await espera(1600); if(!vivo())return;
+    T.classList.add('rodando'); mover(T,960,2800);
+    for(let i=5;i<L.length;i++){await falar(i,L[i],0,vivo); if(!vivo())return;}
+    st(`Entrada ${ton(r.P)} · esperado ${ton(r.esperado)} · expedido ${ton(r.pexp)}`);
+    window.__fim=performance.now();
+  }
+}
+@@@ END
+@@@ FIND
+  if(modo==='expedicao') t+=`Entrou a ${pc(r.ui)}%
+@@@ REPLACE
+  if(modo==='romaneio') t+=`Carga ${kg(r.P)}\nImpureza ${pc(r.imp)}% (tol. ${pc(r.impB)}%): −${kg(r.kImp)}\nUmidade ${pc(r.u)}% (padrão ${pc(r.ref,1)}%): −${kg(r.kUmi)}\nAvariados ${pc(r.ava)}% (tol. ${pc(r.avaB)}%): −${kg(r.kAva)}\nPeso líquido: ${kg(r.liq)} (${sc(r.liq)})`+(r.preco>0?`\nValor a receber: ${rs(r.valor)}`:'');
+  if(modo==='balanco') t+=`Entrada ${kg(r.P)} a ${pc(r.ui)}%\nLimpeza −${kg(r.kImp)} · Água (até ${pc(r.uf)}%) −${kg(r.kAgua)} · Operação −${kg(r.kOper)}\nEsperado ${kg(r.esperado)} · Expedido ${kg(r.pexp)}\n${r.ok?'Dentro do esperado':'Diferença '+(r.dif<0?'−':'+')+kg(Math.abs(r.dif))+' ('+pc(r.difPct,2)+'%)'}`;
+  if(modo==='expedicao') t+=`Entrou a ${pc(r.ui)}%
+@@@ END
+@@@ FIND
+ex:'Secar só até o padrão evita entregar água a menos sem receber por ela.'}
+];
+@@@ REPLACE
+ex:'Secar só até o padrão evita perder peso sem receber por ele.'},
+/* ---- Romaneio ---- */
+{t:'Romaneio',p:'No romaneio, em que ordem os descontos costumam ser aplicados?',ok:'Impureza, depois umidade, depois avariados',er:['Umidade, depois impureza, depois avariados','Todos somados sobre o peso bruto','Avariados, depois impureza, depois umidade'],ex:'A impureza sai primeiro porque não é grão. A umidade é calculada sobre o grão limpo, e os avariados sobre o que sobra.'},
+{t:'Romaneio',p:'Carga de 37.000 kg com 2% de impureza e tolerância de 1%. Quanto é descontado de impureza?',ok:'Cerca de 374 kg',er:['740 kg','370 kg','37 kg'],ex:'(2 − 1) × 100 ÷ 99 = 1,01%. 37.000 × 1,01% = 374 kg.'},
+{t:'Romaneio',p:'Soja com 9,5% de avariados e tolerância de 8%. Qual o desconto de avariados?',ok:'1,5%',er:['9,5%','8%','0,95%'],ex:'Só o que passa da tolerância: 9,5 − 8 = 1,5%.'},
+{t:'Romaneio',p:'Por que o desconto de umidade é calculado depois da impureza?',ok:'Porque a umidade se refere ao grão, e a impureza não é grão',er:['Porque a norma manda descontar a umidade duas vezes','Porque a impureza é mais barata','Porque a balança só pesa o grão limpo'],ex:'Descontar a impureza antes evita cobrar umidade sobre palha, terra e pedra.'},
+/* ---- Balanço de massa ---- */
+{t:'Balanço de massa',p:'Soja recebida: 30.000 kg a 16%, referência 14%. Qual a correção física pela umidade?',ok:'697,67 kg',er:['600 kg','900 kg','420 kg'],ex:'30.000 × (16 − 14) ÷ (100 − 14) = 697,67 kg. O peso equivalente corrigido é 29.302,33 kg.'},
+{t:'Balanço de massa',p:'Por que comparar só o peso de entrada com o de saída não basta?',ok:'Porque parte da diferença é água, impureza e perda operacional, e cada uma precisa ser explicada',er:['Porque a balança de saída é sempre errada','Porque o peso de saída sempre é maior','Porque a norma proíbe essa comparação'],ex:'O balanço de massa separa a diferença em água, impureza e operação. O que sobra precisa de investigação.'},
+{t:'Balanço de massa',p:'988 t a 16% são secas até 13,5%. Quanta água sai?',ok:'Cerca de 28,6 t',er:['24,7 t','2,5 t','35 t'],ex:'988 × (100 − 16) ÷ (100 − 13,5) = 959,4 t. 988 − 959,4 = 28,6 t.'},
+{t:'Balanço de massa',p:'Secar o grão de 14% para 13% (supersecagem) tira quanto do peso?',ok:'Cerca de 1,15%',er:['1%','0,87%','14%'],ex:'1 × 100 ÷ (100 − 13) = 1,15%. É peso perdido sem pagamento a mais.'},
+{t:'Balanço de massa',p:'Qual é a causa mais comum de uma diferença sem explicação no balanço de massa?',ok:'Umidade mal medida na entrada ou na saída',er:['Excesso de sacas no armazém','Preço baixo da soja','Grão com PH alto'],ex:'Meio ponto de erro na umidade média de um lote grande muda o peso esperado em toneladas.'}
+];
+@@@ END
+@@@ FIND
+$('truckInicio').innerHTML=
+@@@ REPLACE
+$('figRom').innerHTML=`<svg viewBox="0 0 420 230">${solo(196)}
+  <g transform="translate(-4,72) scale(.6)">${truckSVG({carretas:1}).svg}</g>
+  <g transform="translate(250,26) rotate(4)" stroke="${OL}" stroke-linejoin="round"><rect width="130" height="160" rx="10" fill="#fffdf6" stroke-width="3"/><rect x="40" y="-10" width="50" height="22" rx="7" fill="#c9d1d8" stroke-width="2.5"/>
+    <g font-family="Barlow,sans-serif" font-weight="700" font-size="13" fill="${OL}" stroke="none"><text x="14" y="40">UMIDADE</text><text x="14" y="70">IMPUREZA</text><text x="14" y="100">AVARIADOS</text><text x="116" y="40" text-anchor="end" fill="#b5482e">17,5%</text><text x="116" y="70" text-anchor="end" fill="#b5482e">2,3%</text><text x="116" y="100" text-anchor="end" fill="#b5482e">9,5%</text><text x="14" y="140" font-size="15">LÍQUIDO</text></g>
+    <line x1="14" y1="116" x2="116" y2="116" stroke-width="2"/><rect x="74" y="126" width="44" height="20" rx="5" fill="#8fd14f" stroke-width="2"/></g></svg>`;
+$('figBal').innerHTML=`<svg viewBox="0 0 420 230">${solo(196)}
+  <g stroke="${OL}" stroke-linejoin="round"><rect x="40" y="40" width="78" height="150" rx="6" fill="#e3e9ee" stroke-width="3"/>${[60,80,100,120,140].map(y=>`<line x1="40" y1="${y}" x2="118" y2="${y}" stroke-width="2" opacity=".5"/>`).join('')}
+    <rect x="30" y="160" width="40" height="30" rx="4" fill="#7b8792" stroke-width="2.5"/><path d="M50 184 q-10 -10 0 -22 q4 8 6 4 q6 10 -6 18z" fill="#ffb02e" stroke-width="2"/>
+    <path d="M60 30 q-8 -10 0 -18 M80 30 q-8 -10 0 -18 M100 30 q-8 -10 0 -18" fill="none" stroke="#e9eef2" stroke-width="5" stroke-linecap="round"/></g>
+  <g transform="translate(150,72) scale(.6)">${truckSVG({carretas:1}).svg}</g>
+  <g transform="translate(372,60)"><circle r="20" fill="#f2c200" stroke="${OL}" stroke-width="2.5"/><text y="7" text-anchor="middle" font-family="Barlow,sans-serif" font-weight="800" font-size="18" fill="${OL}">kg</text></g></svg>`;
+$('truckInicio').innerHTML=
+@@@ END
+@@@ FIND
+function abrirCfg(){$('cfgFator').value=FATOR;$('cfg').hidden=false;$('cfgFator').focus();}
+@@@ REPLACE
+let cfgM=MODELO;
+function cfgMostra(){$('cfgModelo').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===cfgM));$('cfgLFator').hidden=cfgM!=='fator';$('cfgLQuebra').hidden=cfgM!=='agua';}
+function abrirCfg(){cfgM=MODELO;$('cfgFator').value=FATOR;$('cfgQuebra').value=QUEBRA;cfgMostra();$('cfg').hidden=false;$('cfgModelo').querySelector('[aria-pressed="true"]').focus();}
+$('cfgModelo').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;cfgM=b.dataset.m;cfgMostra();});
+@@@ END
+@@@ FIND
+$('cfgOk').onclick=()=>{const v=parseFloat(String($('cfgFator').value).replace(',','.'));if(isFinite(v)&&v>=0){FATOR=v;try{localStorage.setItem('motomco-fator',String(v));}catch(e){}}$('cfg').hidden=true;atualizar();};
+@@@ REPLACE
+$('cfgOk').onclick=()=>{const v=parseFloat(String($('cfgFator').value).replace(',','.')), q=parseFloat(String($('cfgQuebra').value).replace(',','.'));
+  MODELO=cfgM; if(isFinite(v)&&v>=0)FATOR=v; if(isFinite(q)&&q>=0)QUEBRA=q;
+  try{localStorage.setItem('motomco-fator',String(FATOR));localStorage.setItem('motomco-modelo',MODELO);localStorage.setItem('motomco-quebra',String(QUEBRA));}catch(e){}
+  $('cfg').hidden=true;atualizar();};
+if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}
+@@@ END
+@@@ FIND
+<svg class="cena" id="cena" viewBox="0 0 900 360" role="img" aria-label="Animação da carga"></svg>
+@@@ REPLACE
+<svg class="cena" id="cena" hidden></svg>
+        <div class="fpalco" id="fpalco" role="img" aria-label="Etapas da simulação com fotos">
+          <div class="fp-fotos" id="fpFotos"></div>
+          <div class="fp-topo"><span class="fp-num" id="fpNum">1</span><span class="fp-tit" id="fpTit"></span></div>
+          <div class="fp-visor" id="fpVisor" hidden><small id="fpVRot">PESO BRUTO</small><b id="fpVVal">0 kg</b><span id="fpVSub"></span></div>
+          <div class="fp-med" id="fpMed" hidden><small>MEDIDOR MOTOMCO · <span id="fpMCurva">SOJA</span></small><b id="fpMU">--,-%</b><span id="fpMExtra"></span></div>
+          <div class="fp-etq" id="fpEtq" hidden></div>
+          <div class="fp-passos" id="fpPassos"></div>
+        </div>
+@@@ END
+@@@ FIND
+<button class="perfil" data-modo="produtor" style="--pc:#3f8a4c">
+@@@ REPLACE
+<button class="perfil" data-modo="produtor" data-foto style="--pc:#3f8a4c;--foto:url(fotos/01-colheita.jpg)">
+@@@ END
+@@@ FIND
+<button class="perfil" data-modo="unidade" style="--pc:#6fae3e">
+@@@ REPLACE
+<button class="perfil" data-modo="unidade" data-foto style="--pc:#6fae3e;--foto:url(fotos/04-calador.jpg)">
+@@@ END
+@@@ FIND
+<button class="perfil" data-modo="expedicao" style="--pc:#2f73b0">
+@@@ REPLACE
+<button class="perfil" data-modo="expedicao" data-foto style="--pc:#2f73b0;--foto:url(fotos/10-expedicao.jpg)">
+@@@ END
+@@@ FIND
+</style>
+</head>
+@@@ REPLACE
+/* ===== v3: fotos reais e etapas numeradas ===== */
+#inicio{background:linear-gradient(180deg,rgba(4,40,20,.94) 0%,rgba(4,40,20,.78) 45%,rgba(4,40,20,.97) 100%),url(fotos/12-unidade.jpg) center 30%/cover!important}
+.perfil[data-foto]{background-image:linear-gradient(180deg,rgba(4,30,15,0) 22%,rgba(4,30,15,.5) 52%,rgba(4,30,15,.95) 100%),var(--foto);background-size:cover;background-position:center}
+.perfil[data-foto] .fig{display:none}
+.card-pill{background:var(--yel)!important;color:#06401f!important}
+.fig-av img{border-color:var(--yel)!important}
+.perfil:focus-visible{outline-color:var(--yel)!important}
+.card-txt b{font-family:var(--f-d)!important;font-weight:800!important;text-transform:uppercase}
+.abertura h1{font-family:var(--f-d)!important;font-weight:800!important;text-transform:uppercase}
+.estrada{display:none}
+#inicio{min-height:auto!important;padding-bottom:28px!important}
+.ia-nota{display:block;font-weight:400;font-size:12px;color:rgba(255,255,255,.7);margin-top:2px}
+.fpalco{position:relative;aspect-ratio:16/8;min-height:300px;overflow:hidden;background:#0b3d1e;color:#fff}
+.fp-fotos{position:absolute;inset:0}
+.fp-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.02);transition:opacity .9s ease,transform 9s ease-out}
+.fp-img.on{opacity:1;transform:scale(1.1)}
+.fpalco::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(4,30,15,.55) 0%,rgba(4,30,15,0) 28%,rgba(4,30,15,0) 60%,rgba(4,30,15,.8) 100%);pointer-events:none}
+.fp-topo{position:absolute;z-index:2;top:14px;left:14px;right:240px;display:flex;align-items:center;gap:10px}
+.fp-num{flex-shrink:0;width:40px;height:40px;border-radius:50%;background:#fff;color:#0b3d1e;border:3px solid var(--yel);display:grid;place-items:center;font:800 20px var(--f-d)}
+.fp-tit{font:800 clamp(18px,3vw,30px)/1.05 var(--f-d);text-transform:uppercase;background:#0b3d1e;padding:8px 14px;border-radius:8px;border-left:5px solid var(--yel)}
+.fp-visor{position:absolute;z-index:2;top:14px;right:14px;background:rgba(17,22,26,.93);border:2px solid #2d353c;border-radius:12px;padding:10px 14px;min-width:210px;text-align:right}
+.fp-visor small,.fp-med small{display:block;font:700 11px var(--f-b);letter-spacing:.12em;color:var(--yel);text-align:left}
+.fp-visor b{display:block;font:600 clamp(22px,3.4vw,34px) var(--f-m);color:#ff9f43;font-variant-numeric:tabular-nums;white-space:nowrap}
+.fp-visor span{display:block;font:500 13px var(--f-b);color:#c9d6cc}
+.fp-med{position:absolute;z-index:2;left:14px;bottom:62px;background:linear-gradient(180deg,#f7f1e2,#e2cf9f);color:#111;border:6px solid #2c2f31;border-radius:14px;padding:8px 14px;min-width:190px;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.fp-med small{color:#0f5a2a}
+.fp-med b{display:block;font:600 clamp(28px,4vw,40px) var(--f-b);font-variant-numeric:tabular-nums}
+.fp-med span{display:block;font:500 12px var(--f-b);color:#333}
+.fp-etq{position:absolute;z-index:2;left:50%;transform:translateX(-50%);bottom:58px;width:max-content;max-width:calc(100% - 28px);padding:9px 18px;border-radius:24px;font:700 clamp(13px,1.7vw,16px) var(--f-b);color:#fff;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.fp-passos{position:absolute;z-index:2;left:0;right:0;bottom:0;display:flex;gap:4px;padding:10px 12px;overflow-x:auto}
+.fp-passos span{flex:1;min-width:max-content;display:flex;align-items:center;gap:6px;font:700 12px var(--f-b);text-transform:uppercase;letter-spacing:.03em;color:rgba(255,255,255,.7);background:rgba(4,30,15,.6);padding:6px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.15)}
+.fp-passos b{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.2);color:#fff;font-size:11px}
+.fp-passos span.on{background:var(--yel);color:#0b3d1e;border-color:var(--yel)}.fp-passos span.on b{background:#0b3d1e;color:#fff}
+.fp-passos span.feito b{background:var(--yel);color:#0b3d1e}
+@media (max-width:640px){.fpalco{aspect-ratio:4/5}.fp-topo{right:14px}.fp-visor{top:68px;right:auto;left:14px;text-align:left}.fp-med{bottom:104px}.fp-etq{left:14px;right:14px;transform:none;width:auto}}
+@media (prefers-reduced-motion:reduce){.fp-img{transition:opacity .2s}.fp-img.on{transform:none}}
+</style>
+</head>
+@@@ END
